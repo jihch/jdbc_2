@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 /**
  * 1.什么叫数据库事务？
@@ -26,6 +27,7 @@ import java.sql.PreparedStatement;
  */
 public class TransactionTest {
 
+    //*********************未考虑数据库事务情况下的转账操作*********************
     /**
      * 针对于数据表 user_table 来说：
      * AA用户给BB用户转账100
@@ -45,7 +47,6 @@ public class TransactionTest {
         update(sql2, "BB");
         System.out.println("转账成功");
     }
-
 
     //通用的增删改查操作---version 1.0
     public int update(String sql, Object ...args) {//sql 中占位符的个数与可变形参的长度相同
@@ -71,6 +72,82 @@ public class TransactionTest {
             e.printStackTrace();
         } finally {
             JDBCUtils.closeResource(conn, ps);
+        }
+        return 0;
+    }
+
+
+
+
+    //*********************考虑数据库事务后的转账操作*********************
+    @Test
+    public void testUpdateWithTx() {
+        Connection con = null;
+        try {
+            con = JDBCUtils.getConnection();
+            System.out.println(con.getAutoCommit());
+
+            //取消数据的自动提交
+            con.setAutoCommit(false);
+
+            String sql1 = "update user_table set balance = balance - 100 where user = ?";
+            update(con, sql1, "AA");
+
+            //模拟网络异常
+        System.out.println(1 / 0);
+
+            String sql2 = "update user_table set balance = balance + 100 where user = ?";
+            update(con, sql2, "BB");
+
+            //提交数据
+            con.commit();
+            System.out.println("转账成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            //回滚数据
+            try {
+                con.rollback();
+            } catch (SQLException ex) {
+                e.printStackTrace();
+            }
+
+        } finally {
+
+            /*
+             * 修改其为自动提交数据
+             * 主要针对使用数据库连接池的使用
+             */
+            try {
+                con.setAutoCommit(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            JDBCUtils.closeResource(con, null);
+        }
+
+    }
+
+    //通用的增删改查操作---version 2.0（考虑上事务）
+    public int update(Connection conn, String sql, Object ...args) {//sql 中占位符的个数与可变形参的长度相同
+        PreparedStatement ps = null;
+
+        try {
+            //1.预编译sql语句，返回PreparedStatement的实例
+            ps = conn.prepareStatement(sql);
+
+            //2.填充占位符
+            for (int i = 0; i < args.length; i++) {
+                ps.setObject(i + 1, args[i]);
+            }
+
+            //4.执行
+            return ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            JDBCUtils.closeResource(null, ps);
         }
         return 0;
     }
