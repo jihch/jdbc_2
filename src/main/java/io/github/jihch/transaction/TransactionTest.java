@@ -97,7 +97,7 @@ public class TransactionTest {
             update(con, sql1, "AA");
 
             //模拟网络异常
-        System.out.println(1 / 0);
+            System.out.println(1 / 0);
 
             String sql2 = "update user_table set balance = balance + 100 where user = ?";
             update(con, sql2, "BB");
@@ -169,16 +169,24 @@ public class TransactionTest {
          */
         System.out.printf("conn.getTransactionIsolation():%d\n", conn.getTransactionIsolation());
 
+        //设置事务的隔离级别为读已提交
+        conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+        System.out.printf("conn.getTransactionIsolation():%d\n", conn.getTransactionIsolation());
+
         //设置禁用自动提交
         conn.setAutoCommit(false);
+
         String sql = "select user, password, balance from user_table where user = ?";
         User user = getInstance(conn, User.class, sql, "AA");
+
         System.out.println(user);
     }
 
     @Test
     public void testTransactionUpdate() throws Exception {
         Connection conn = JDBCUtils.getConnection();
+
+        //取消自动提交数据
         conn.setAutoCommit(false);
         String sql = "update user_table set balance = ? where user = ?";
         update(conn, sql, 5000, "AA");
@@ -200,7 +208,6 @@ public class TransactionTest {
         }
 
         try {
-            conn = JDBCUtils.getConnection();
             ps = conn.prepareStatement(sql);
 
             for (int i = 0; i < args.length; i++) {
@@ -250,6 +257,7 @@ public class TransactionTest {
             throw new RuntimeException(e);
 
         } finally {
+
             JDBCUtils.closeResource(null, ps, rs);
 
         }
