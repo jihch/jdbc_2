@@ -1,11 +1,14 @@
 package io.github.jihch.transaction;
 
+import io.github.jihch.bean.User;
 import io.github.jihch.util.JDBCUtils;
 import org.junit.Test;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.lang.reflect.Field;
+import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 1.什么叫数据库事务？
@@ -150,6 +153,109 @@ public class TransactionTest {
             JDBCUtils.closeResource(null, ps);
         }
         return 0;
+    }
+
+    //**************************************************
+    @Test
+    public void testTransactionSelect() throws Exception {
+        Connection conn = JDBCUtils.getConnection();
+        /*
+        获取当前连接的隔离级别
+        int TRANSACTION_NONE             = 0;
+        int TRANSACTION_READ_UNCOMMITTED = 1;
+        int TRANSACTION_READ_COMMITTED   = 2;
+        int TRANSACTION_REPEATABLE_READ  = 4;
+        int TRANSACTION_SERIALIZABLE     = 8;
+         */
+        System.out.printf("conn.getTransactionIsolation():%d\n", conn.getTransactionIsolation());
+
+        //设置禁用自动提交
+        conn.setAutoCommit(false);
+        String sql = "select user, password, balance from user_table where user = ?";
+        User user = getInstance(conn, User.class, sql, "AA");
+        System.out.println(user);
+    }
+
+    @Test
+    public void testTransactionUpdate() throws Exception {
+        Connection conn = JDBCUtils.getConnection();
+        conn.setAutoCommit(false);
+        String sql = "update user_table set balance = ? where user = ?";
+        update(conn, sql, 5000, "AA");
+        TimeUnit.SECONDS.sleep(15);
+        System.out.println("修改结束");
+    }
+
+
+    //通用的查询操作，用于返回数据表中的一条记录（version 2.0；考虑上事务）
+    public <T> T getInstance(Connection conn, Class<T> clazz, String sql, Object... args) {
+        T t = null;
+
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        Map<String, Field> fieldMap = new HashMap<>();
+        for (Field declaredField : clazz.getDeclaredFields()) {
+            fieldMap.put(declaredField.getName(), declaredField);
+        }
+
+        try {
+            conn = JDBCUtils.getConnection();
+            ps = conn.prepareStatement(sql);
+
+            for (int i = 0; i < args.length; i++) {
+                ps.setObject(i + 1, args[i]);
+            }
+
+            //执行获取结果集
+            rs = ps.executeQuery();
+
+            //获取结果集的元数据
+            ResultSetMetaData rsmd = rs.getMetaData();
+
+            int columnCount = rsmd.getColumnCount();
+
+            if (rs.next()) {
+
+                t = clazz.newInstance();
+
+                for (int i = 0; i < columnCount; i++) {
+                    //获取每个列的列值：通过ResultSet
+                    Object value = rs.getObject(i + 1);
+
+                    //获取每个列的列名：通过ResultSetMetaData
+                    //获取列的列名：getColumnName() --不推荐使用
+                    //获取列的别名：getColumnLabel()
+                    String columnName = rsmd.getColumnName(i + 1);
+                    String columnLabel = rsmd.getColumnLabel(i + 1);
+//                    System.out.printf("columnName:%s, columnLabel:%s\n", columnName, columnLabel);
+
+                    //通过反射，将对象指定名 columnName 的属性赋值为指定的值 columnValue
+//                    Field field = Order.class.getDeclaredField(columnName);
+
+                    if (fieldMap.containsKey(columnLabel)) {
+                        Field field = clazz.getDeclaredField(columnLabel);
+                        field.setAccessible(true);
+                        field.set(t, value);
+                    }
+                }
+                //获取每个列的列名
+
+            }//end if
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+
+        } finally {
+            JDBCUtils.closeResource(null, ps, rs);
+
+        }
+
+        return t;
+
     }
 
 }
