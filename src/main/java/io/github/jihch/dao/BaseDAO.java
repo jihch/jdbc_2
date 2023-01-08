@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
+ * DAO：data(base) access object
  * 封装了针对于数据表的通用操作
  * abstract 声明为一个抽象类，不能用来实例化对象使用，只能通过实例化继承了 BaseDAO 的子类来执行
  */
