@@ -144,7 +144,7 @@ public abstract class BaseDAO {
                     //获取列的别名：getColumnLabel()
                     String columnName = rsmd.getColumnName(i + 1);
                     String columnLabel = rsmd.getColumnLabel(i + 1);
-                    System.out.printf("columnName:%s, columnLabel:%s\n", columnName, columnLabel);
+//                    System.out.printf("columnName:%s, columnLabel:%s\n", columnName, columnLabel);
 
                     //通过反射，将对象指定名 columnName 的属性赋值为指定的值 columnValue
                     if (fieldMap.containsKey(columnLabel)) {
