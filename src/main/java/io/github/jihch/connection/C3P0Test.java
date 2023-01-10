@@ -1,6 +1,7 @@
 package io.github.jihch.connection;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
+import com.mchange.v2.c3p0.DataSources;
 import org.junit.Test;
 
 import java.beans.PropertyVetoException;
@@ -9,6 +10,7 @@ import java.sql.SQLException;
 
 public class C3P0Test {
 
+    //方式一：
     @Test
     public void testGetConnection() throws PropertyVetoException, SQLException {
 
@@ -26,6 +28,17 @@ public class C3P0Test {
         Connection conn = cpds.getConnection();
         System.out.println(conn);
 
+        //销毁c3p0数据库连接池
+//        DataSources.destroy(cpds);
     }
+
+    //方式二：使用配置文件
+    @Test
+    public void testGetConnection1() throws SQLException {
+        ComboPooledDataSource cpds = new ComboPooledDataSource("helloc3p0");
+        Connection conn = cpds.getConnection();
+        System.out.println(conn);
+    }
+
 
 }
