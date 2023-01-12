@@ -15,7 +15,7 @@ public class JDBCUtilsTest {
     private CustomerDAOImpl dao = new CustomerDAOImpl();
 
     @Test
-    public void getConnection1() {
+    public void getConnection() {
         Connection con = null;
         try {
             con = JDBCUtils.getConnection();
@@ -32,7 +32,7 @@ public class JDBCUtilsTest {
      * 每次 connnection 的 hashcode 都不同，怎么判断 connnection 被重用了？
      */
     @Test
-    public void getConnection2() {
+    public void getConnectionReuse() {
         Connection con = null;
         Set<Integer> set = new HashSet<>();
         for (int i = 0; i < 100; i++) {
@@ -46,5 +46,20 @@ public class JDBCUtilsTest {
             }
         }
         set.forEach(System.out::println);
+    }
+
+
+    @Test
+    public void getConnection1() {
+        Connection con = null;
+        try {
+            con = JDBCUtils.getConnection1();
+            Customer customer = dao.getCustomerById(con, 4);
+            System.out.println(customer);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            JDBCUtils.closeResource(con, null);
+        }
     }
 }
