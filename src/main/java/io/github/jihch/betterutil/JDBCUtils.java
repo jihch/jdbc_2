@@ -1,5 +1,6 @@
 package io.github.jihch.betterutil;
 
+import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import org.apache.commons.dbcp.BasicDataSourceFactory;
 
@@ -20,7 +21,7 @@ public class JDBCUtils {
      * @return
      * @throws SQLException
      */
-    public static Connection getConnection() throws SQLException {
+    public static Connection getConnectionFromC3P0() throws SQLException {
         Connection conn = cpds.getConnection();
         return conn;
     }
@@ -49,8 +50,30 @@ public class JDBCUtils {
      * @return
      * @throws SQLException
      */
-    public static Connection getConnection1() throws Exception {
+    public static Connection getConnectionFromDBCP() throws Exception {
         Connection conn = dbcp.getConnection();
+        return conn;
+    }
+
+    /**
+     * 使用 Druid 数据库连接池技术
+     */
+    private static DataSource druid;
+
+    static {
+        Properties pros = new Properties();
+        InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream("druid.properties");
+        try {
+            pros.load(is);
+            druid = DruidDataSourceFactory.createDataSource(pros);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public static Connection getConnectionFromDruid() throws SQLException {
+        Connection conn = druid.getConnection();
         return conn;
     }
 
