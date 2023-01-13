@@ -15,7 +15,7 @@ public class JDBCUtilsTest {
     private CustomerDAOImpl dao = new CustomerDAOImpl();
 
     @Test
-    public void getConnection() {
+    public void getConnectionFromC3P0() {
         Connection con = null;
         try {
             con = JDBCUtils.getConnectionFromC3P0();
@@ -32,7 +32,7 @@ public class JDBCUtilsTest {
      * 每次 connnection 的 hashcode 都不同，怎么判断 connnection 被重用了？
      */
     @Test
-    public void getConnectionReuse() {
+    public void getConnectionFromC3P0Reuse() {
         Connection con = null;
         Set<Integer> set = new HashSet<>();
         for (int i = 0; i < 100; i++) {
