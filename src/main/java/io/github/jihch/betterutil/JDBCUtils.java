@@ -72,8 +72,13 @@ public class JDBCUtils {
 
     }
 
-    public static Connection getConnectionFromDruid() throws SQLException {
-        Connection conn = druid.getConnection();
+    public static Connection getConnectionFromDruid() {
+        Connection conn = null;
+        try {
+            conn = druid.getConnection();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return conn;
     }
 
