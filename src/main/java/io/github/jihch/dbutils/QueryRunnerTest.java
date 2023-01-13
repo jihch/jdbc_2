@@ -16,10 +16,11 @@ public class QueryRunnerTest {
     @Test
     public void testInsert() {
         QueryRunner runner = new QueryRunner();
-        Connection conn = JDBCUtils.getConnectionFromDruid();
         String sql = "insert into customers (name, email, birth) values (?, ?, ?)";
         int insertCount = 0;
+        Connection conn = null;
         try {
+            conn = JDBCUtils.getConnectionFromDruid();
             insertCount = runner.update(conn, sql, "蔡徐坤", "caixukun@126.com", "1997-09-08");
             System.out.printf("添加了 %d 条记录\n", insertCount);
         } catch (SQLException e) {
