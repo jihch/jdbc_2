@@ -1,5 +1,7 @@
 package io.github.jihch.util;
 
+import org.apache.commons.dbutils.DbUtils;
+
 import java.io.InputStream;
 import java.sql.*;
 import java.util.Properties;
@@ -90,6 +92,39 @@ public class JDBCUtils {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    /**
+     * 使用 dbutils.jar 中提供的 DbUtils 工具类实现资源的关闭
+     * 关闭连接和 Statement 的操作
+     * @param conn
+     * @param ps
+     */
+    public static void closeResource1(Connection conn, Statement ps, ResultSet rs){
+//        try {
+//            DbUtils.close(rs);
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+//
+//        try {
+//            DbUtils.close(ps);
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+//
+//        try {
+//            DbUtils.close(conn);
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+
+//        DbUtils.closeQuietly(rs);
+//        DbUtils.closeQuietly(ps);
+//        DbUtils.closeQuietly(conn);
+
+        DbUtils.closeQuietly(conn, ps, rs);
+
     }
 
 }
