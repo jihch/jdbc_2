@@ -237,4 +237,52 @@ public class QueryRunnerTest {
 
     }
 
+    /**
+     * 定义ResultSetHandler的实现类完成查询操作
+     * ScalarHandler:是 ResultSetHandler 接口的实现类，对应查询结果中的单个值
+     */
+    @Test
+    public void testCustomizedQuery() {
+        Connection conn = null;
+        String sql = "select id, name, email, birth from customers where id = ?";
+        Customer c = null;
+
+        /*
+        AbstractKeyedHandler, AbstractListHandler, ArrayHandler, ArrayListHandler, BaseResultSetHandler,
+        BeanHandler, BeanListHandler, BeanMapHandler, ColumnListHandler,
+        KeyedHandler, MapHandler, MapListHandler, ScalarHandler
+         */
+        QueryRunner runner = new QueryRunner();
+
+        ResultSetHandler<Customer> rsh = new ResultSetHandler<Customer>() {
+            @Override
+            public Customer handle(ResultSet rs) throws SQLException {
+                if (rs.next()) {
+                    int id = rs.getInt("id");
+                    String name = rs.getString("name");
+                    String email = rs.getString("email");
+                    Date birth = rs.getDate("birth");
+                    Customer c = new Customer(id, name, email, birth);
+                    return c;
+                }
+                return null;
+            }
+        };
+
+        try {
+
+            conn = JDBCUtils.getConnectionFromDruid();
+
+            c = runner.query(conn, sql, rsh,9);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            JDBCUtils.closeResource(conn, null);
+        }
+
+        System.out.println(c);
+
+    }
+
 }
